@@ -1,0 +1,16 @@
+[Unit]
+Description=Telegram Student Verification Bot
+After=network.target
+
+[Service]
+Type=simple
+User=botuser
+WorkingDirectory=/opt/bhzd-exam-bot
+EnvironmentFile=/opt/bhzd-exam-bot/.env
+ExecStart=/opt/bhzd-exam-bot/.venv/bin/python /opt/bhzd-exam-bot/app.py
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
