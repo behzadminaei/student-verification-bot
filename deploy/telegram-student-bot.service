@@ -4,10 +4,11 @@ After=network.target
 
 [Service]
 Type=simple
-User=botuser
-WorkingDirectory=/opt/bhzd-exam-bot
-EnvironmentFile=/opt/bhzd-exam-bot/.env
-ExecStart=/opt/bhzd-exam-bot/.venv/bin/python /opt/bhzd-exam-bot/app.py
+User=student-bot
+Group=student-bot
+WorkingDirectory=/opt/apps/student-verification-bot
+EnvironmentFile=/opt/apps/student-verification-bot/.env
+ExecStart=/opt/apps/student-verification-bot/.venv/bin/python /opt/apps/student-verification-bot/app.py
 Restart=on-failure
 RestartSec=5
 NoNewPrivileges=true
