@@ -221,9 +221,17 @@ async def receive_national_id(update: Update, context: ContextTypes.DEFAULT_TYPE
     admin = admin_username(context)
 
     if outcome.result == ClaimResult.SUCCESS:
-        assert outcome.username is not None and outcome.password is not None
+        assert (
+            outcome.username is not None
+            and outcome.password is not None
+            and outcome.exam_url is not None
+        )
         await message.reply_text(
-            messages.credentials_success(outcome.username, outcome.password),
+            messages.credentials_success(
+                outcome.username,
+                outcome.password,
+                outcome.exam_url,
+            ),
             parse_mode=ParseMode.HTML,
         )
         clear_conversation_data(context)

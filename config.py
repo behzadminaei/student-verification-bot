@@ -22,6 +22,7 @@ COL_STUDENT_NUMBER = "student_number"
 COL_NATIONAL_ID = "national_id"
 COL_USERNAME = "username"
 COL_PASSWORD = "password"
+COL_EXAM_URL = "exam_url"
 COL_TELEGRAM_USER_ID = "telegram_user_id"
 COL_TELEGRAM_USERNAME = "telegram_username"
 COL_PHONE_NUMBER = "phone_number"
@@ -34,6 +35,7 @@ REQUIRED_COLUMNS: typ.Final[frozenset[str]] = frozenset(
         COL_STUDENT_NUMBER,
         COL_USERNAME,
         COL_PASSWORD,
+        COL_EXAM_URL,
     }
 )
 

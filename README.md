@@ -88,6 +88,7 @@ CREATE TABLE students (
     national_id TEXT,
     username TEXT NOT NULL,
     password TEXT NOT NULL,
+    exam_url TEXT NOT NULL,
     telegram_user_id INTEGER,
     telegram_username TEXT,
     phone_number TEXT,
@@ -104,6 +105,16 @@ sqlite3 students.db < migration.sql
 ```
 
 `migration.sql` uses `ALTER TABLE ... ADD COLUMN`. If a column already exists, skip that line and continue. The unique index for `telegram_user_id` is also created by the bot at startup when possible.
+
+### Import students from Excel
+
+```bash
+pip install openpyxl
+python scripts/import_students_xlsx.py Stdnts-all.xlsx students.db
+```
+
+Expected columns: `Full Name`, `Student-Number`, `Password`, `url`.  
+`Student-Number` is stored as both `student_number` and `username`. `url` becomes `exam_url`.
 
 ## Run the bot
 
@@ -150,7 +161,7 @@ Mount your real `students.db` and `.env` as shown in `docker-compose.yml`.
 3. Enter exact full name (National ID / Golestan spelling)
 4. Enter student number (must match the same DB record)
 5. Enter National ID (10 digits + checksum)
-6. Bot atomically claims the record and sends username/password in monospace HTML
+6. Bot atomically claims the record and sends username, password, and the student's exam URL in monospace HTML
 
 Commands:
 

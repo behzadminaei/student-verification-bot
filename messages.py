@@ -128,9 +128,10 @@ GENERIC_ERROR = (
 CONTACT_BUTTON = "📱 اشتراک‌گذاری شماره تماس"
 
 
-def credentials_success(username: str, password: str) -> str:
+def credentials_success(username: str, password: str, exam_url: str) -> str:
     safe_user = html.escape(username, quote=False)
     safe_pass = html.escape(password, quote=False)
+    safe_url = html.escape(exam_url, quote=False)
     return (
         "✅ حساب شما با موفقیت تأیید شد.\n\n"
         "👤 نام کاربری:\n"
@@ -139,7 +140,7 @@ def credentials_success(username: str, password: str) -> str:
         f"<code>{safe_pass}</code>\n\n"
         "🔐 لطفاً این اطلاعات را محرمانه نگه دارید.\n\n"
         "🌐 با استفاده از این اطلاعات وارد سامانه آزمون شوید:\n"
-        "https://exam.behzadminaei.ir/"
+        f"{safe_url}"
     )
 
 

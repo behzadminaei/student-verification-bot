@@ -36,6 +36,7 @@ class ClaimOutcome(typ.NamedTuple):
     result: ClaimResult
     username: str | None = None
     password: str | None = None
+    exam_url: str | None = None
     claimant_telegram_username: str | None = None
 
 
@@ -207,6 +208,7 @@ class Database:
                         {config.COL_ID},
                         {config.COL_USERNAME},
                         {config.COL_PASSWORD},
+                        {config.COL_EXAM_URL},
                         {config.COL_TELEGRAM_USER_ID},
                         {config.COL_TELEGRAM_USERNAME}
                     FROM {config.TABLE_STUDENTS}
@@ -221,12 +223,14 @@ class Database:
                 existing_owner = row[config.COL_TELEGRAM_USER_ID]
                 username = row[config.COL_USERNAME]
                 password = row[config.COL_PASSWORD]
+                exam_url = row[config.COL_EXAM_URL]
 
-                if username is None or password is None:
+                if username is None or password is None or exam_url is None:
                     return ClaimOutcome(ClaimResult.MISSING_CREDENTIALS)
                 username_str = str(username).strip()
                 password_str = str(password).strip()
-                if not username_str or not password_str:
+                exam_url_str = str(exam_url).strip()
+                if not username_str or not password_str or not exam_url_str:
                     return ClaimOutcome(ClaimResult.MISSING_CREDENTIALS)
 
                 if config.ALLOW_ONE_STUDENT_PER_TELEGRAM_USER:
@@ -280,6 +284,7 @@ class Database:
                         ClaimResult.SUCCESS,
                         username=username_str,
                         password=password_str,
+                        exam_url=exam_url_str,
                     )
 
                 cursor = await conn.execute(
@@ -314,6 +319,7 @@ class Database:
                     ClaimResult.SUCCESS,
                     username=username_str,
                     password=password_str,
+                    exam_url=exam_url_str,
                 )
         except aiosqlite.IntegrityError:
             logger.warning(

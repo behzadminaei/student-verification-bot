@@ -10,6 +10,7 @@ ALTER TABLE students ADD COLUMN telegram_user_id INTEGER;
 ALTER TABLE students ADD COLUMN telegram_username TEXT;
 ALTER TABLE students ADD COLUMN phone_number TEXT;
 ALTER TABLE students ADD COLUMN verified_at TEXT;
+ALTER TABLE students ADD COLUMN exam_url TEXT;
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_students_telegram_user_id
 ON students (telegram_user_id)

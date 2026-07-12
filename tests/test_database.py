@@ -18,6 +18,7 @@ CREATE TABLE students (
     national_id TEXT,
     username TEXT NOT NULL,
     password TEXT NOT NULL,
+    exam_url TEXT NOT NULL,
     telegram_user_id INTEGER,
     telegram_username TEXT,
     phone_number TEXT,
@@ -33,24 +34,43 @@ async def db(tmp_path: typ.Any) -> typ.AsyncIterator[Database]:
     await conn.executescript(SCHEMA_SQL)
     await conn.execute(
         """
-        INSERT INTO students (full_name, student_number, username, password)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO students (full_name, student_number, username, password, exam_url)
+        VALUES (?, ?, ?, ?, ?)
         """,
-        ("علی اکبر محمدی", "401123456", "ali.user", "secret-pass"),
+        (
+            "علی اکبر محمدی",
+            "401123456",
+            "ali.user",
+            "secret-pass",
+            "https://exam.example/e/ex1/login",
+        ),
     )
     await conn.execute(
         """
-        INSERT INTO students (full_name, student_number, username, password)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO students (full_name, student_number, username, password, exam_url)
+        VALUES (?, ?, ?, ?, ?)
         """,
-        ("سارا رضایی", "402654321", "sara.user", "sara-pass"),
+        (
+            "سارا رضایی",
+            "402654321",
+            "sara.user",
+            "sara-pass",
+            "https://exam.example/e/ex2/login",
+        ),
     )
     await conn.execute(
         """
-        INSERT INTO students (full_name, student_number, username, password)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO students (full_name, student_number, username, password, exam_url)
+        VALUES (?, ?, ?, ?, ?)
         """,
-        ("بدون رمز", "403000001", "", ""),
+        ("بدون رمز", "403000001", "", "", ""),
+    )
+    await conn.execute(
+        """
+        INSERT INTO students (full_name, student_number, username, password, exam_url)
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        ("بدون آدرس", "403000002", "nourl.user", "nourl-pass", ""),
     )
     await conn.commit()
     await conn.close()
@@ -91,6 +111,7 @@ async def test_prevent_duplicate_telegram_claims(db: Database) -> None:
     assert outcome1.result == ClaimResult.SUCCESS
     assert outcome1.username == "ali.user"
     assert outcome1.password == "secret-pass"
+    assert outcome1.exam_url == "https://exam.example/e/ex1/login"
 
     outcome2 = await db.claim_and_get_credentials(
         student_id=first,
@@ -138,6 +159,7 @@ async def test_same_user_can_reclaim_and_get_credentials(db: Database) -> None:
     assert again.result == ClaimResult.SUCCESS
     assert again.username == "sara.user"
     assert again.password == "sara-pass"
+    assert again.exam_url == "https://exam.example/e/ex2/login"
 
 
 @pytest.mark.asyncio
@@ -178,6 +200,23 @@ async def test_missing_credentials(db: Database) -> None:
     )
     assert outcome.result == ClaimResult.MISSING_CREDENTIALS
     assert outcome.password is None
+    assert outcome.exam_url is None
+
+
+@pytest.mark.asyncio
+async def test_missing_exam_url(db: Database) -> None:
+    student_id = await db.find_student_id_by_name("بدون آدرس")
+    assert student_id is not None
+    outcome = await db.claim_and_get_credentials(
+        student_id=student_id,
+        telegram_user_id=5006,
+        telegram_username="nourl",
+        phone_number="+989166666666",
+        national_id="0013549081",
+    )
+    assert outcome.result == ClaimResult.MISSING_CREDENTIALS
+    assert outcome.username is None
+    assert outcome.exam_url is None
 
 
 @pytest.mark.asyncio
