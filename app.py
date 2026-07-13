@@ -96,7 +96,7 @@ def main() -> None:
     )
 
     application.bot_data["db"] = db
-    application.bot_data["required_group_id"] = cfg["required_group_id"]
+    application.bot_data["required_group_ids"] = cfg["required_group_ids"]
     application.bot_data["admin_username"] = cfg["admin_username"]
     application.bot_data["super_admin_telegram_id"] = cfg["super_admin_telegram_id"]
 

@@ -7,7 +7,7 @@ All user-facing bot messages are in Persian.
 ## Features
 
 - Private-chat only verification flow
-- Required Telegram group membership check
+- Required Telegram group membership check (any of the configured groups)
 - Contact sharing with ownership validation
 - Exact full-name and student-number matching (after Persian/Arabic normalization)
 - Iranian National ID format and checksum validation
@@ -20,7 +20,7 @@ All user-facing bot messages are in Persian.
 - Python 3.12+
 - An existing SQLite database with a `students` table
 - A Telegram bot token from [@BotFather](https://t.me/BotFather)
-- The bot added to the required group (preferably as administrator)
+- The bot added to **each** required group (preferably as administrator)
 
 ## Create the bot with BotFather
 
@@ -48,26 +48,29 @@ Edit `.env`:
 
 ```env
 BOT_TOKEN=123456:ABC-DEF...
-REQUIRED_GROUP_ID=-1001234567890
+REQUIRED_GROUP_IDS=@stats1ut,@OR2_UT,@OperationsResearchUT
 DATABASE_PATH=students.db
 ADMIN_USERNAME=@behzadmminaei
 LOG_LEVEL=INFO
 ```
 
+`REQUIRED_GROUP_IDS` is a comma-separated list. Each entry may be a public `@username` or a numeric chat id (`-100…`). The user is eligible if they are a member of **any** listed group.
+
 Required variables are validated at startup.
 
-## Obtain the Telegram group ID
+## Obtain Telegram group IDs
 
-1. Add the bot to the target group.
-2. Send a message in the group.
-3. Open `https://api.telegram.org/bot<BOT_TOKEN>/getUpdates` in a browser.
-4. Find `"chat":{"id":-100...}` for the group and set `REQUIRED_GROUP_ID` to that value.
-
-You can also forward a group message to bots such as `@userinfobot` / `@RawDataBot` to read the chat id.
+1. Add the bot to **each** target group.
+2. For public groups, you can use `@username` directly in `REQUIRED_GROUP_IDS`.
+3. If a group has no public username (or username lookup fails), obtain the numeric id:
+   - Send a message in the group.
+   - Open `https://api.telegram.org/bot<BOT_TOKEN>/getUpdates` in a browser.
+   - Find `"chat":{"id":-100...}` for the group and use that value.
+   - You can also forward a group message to bots such as `@userinfobot` / `@RawDataBot`.
 
 ## Why the bot may need administrator access
 
-Telegram's `getChatMember` API is used to verify membership. In many setups the bot must be a member of the group, and **administrator rights improve reliability** of membership checks. If the bot cannot check membership, users see a safe error and are asked to retry or contact the admin.
+Telegram's `getChatMember` API is used to verify membership. In many setups the bot must be a member of **each** listed group, and **administrator rights improve reliability** of membership checks. If the bot cannot check membership in any of the groups, users see a safe error and are asked to retry or contact the admin.
 
 Valid membership statuses:
 
@@ -156,7 +159,7 @@ Mount your real `students.db` and `.env` as shown in `docker-compose.yml`.
 
 ## Verification flow
 
-1. `/start` — greeting + group membership check
+1. `/start` — greeting + membership check against any configured group
 2. Share phone number via Telegram contact button
 3. Enter exact full name (National ID / Golestan spelling)
 4. Enter student number (must match the same DB record)

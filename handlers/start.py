@@ -16,7 +16,7 @@ from handlers.common import (
     ensure_private,
 )
 from keyboards import contact_keyboard
-from services.membership import MembershipCheckError, is_group_member
+from services.membership import MembershipCheckError, is_member_of_any_group
 
 logger = logging.getLogger(__name__)
 
@@ -36,9 +36,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
     await message.reply_text(messages.GREETING)
 
-    group_id = int(context.application.bot_data["required_group_id"])
+    group_ids = context.application.bot_data["required_group_ids"]
     try:
-        is_member = await is_group_member(context, group_id, user.id)
+        is_member = await is_member_of_any_group(context, group_ids, user.id)
     except MembershipCheckError:
         await message.reply_text(messages.membership_check_failed(admin_username(context)))
         return ConversationHandler.END

@@ -62,16 +62,35 @@ def _require(name: str) -> str:
     return value
 
 
+def _parse_group_id(token: str) -> int | str:
+    """Parse one group identifier: numeric chat id or @username / username."""
+    if token.startswith("@"):
+        if len(token) < 2:
+            raise ConfigError(f"Invalid group username: {token!r}")
+        return token
+    # Plain numeric (including negative supergroup ids like -100...)
+    if token.lstrip("-").isdigit():
+        return int(token)
+    # Bare public username without @
+    if token.replace("_", "").isalnum():
+        return f"@{token}"
+    raise ConfigError(
+        f"REQUIRED_GROUP_IDS entry must be a chat id or @username, got: {token!r}"
+    )
+
+
+def _parse_required_group_ids(raw: str) -> list[int | str]:
+    parts = [part.strip() for part in raw.split(",")]
+    group_ids = [_parse_group_id(part) for part in parts if part]
+    if not group_ids:
+        raise ConfigError("REQUIRED_GROUP_IDS must contain at least one group id")
+    return group_ids
+
+
 def load_config() -> dict[str, typ.Any]:
     """Validate and return runtime configuration."""
     bot_token = _require("BOT_TOKEN")
-    group_raw = _require("REQUIRED_GROUP_ID")
-    try:
-        required_group_id = int(group_raw)
-    except ValueError as exc:
-        raise ConfigError(
-            f"REQUIRED_GROUP_ID must be an integer, got: {group_raw!r}"
-        ) from exc
+    required_group_ids = _parse_required_group_ids(_require("REQUIRED_GROUP_IDS"))
 
     database_path = os.getenv("DATABASE_PATH", "students.db").strip() or "students.db"
     admin_username = os.getenv("ADMIN_USERNAME", "@behzadmminaei").strip()
@@ -93,7 +112,7 @@ def load_config() -> dict[str, typ.Any]:
 
     return {
         "bot_token": bot_token,
-        "required_group_id": required_group_id,
+        "required_group_ids": required_group_ids,
         "database_path": database_path,
         "admin_username": admin_username,
         "super_admin_telegram_id": super_admin_telegram_id,
