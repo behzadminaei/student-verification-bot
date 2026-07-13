@@ -196,8 +196,13 @@ class Database:
         telegram_username: str | None,
         phone_number: str,
         national_id: str,
+        dry_run: bool = False,
     ) -> ClaimOutcome:
-        """Atomically claim a student record and return credentials on success."""
+        """Atomically claim a student record and return credentials on success.
+
+        When dry_run is True, credentials are returned without any UPDATE and
+        ownership / already-linked checks are skipped (super-admin testing).
+        """
         now = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
 
         try:
@@ -232,6 +237,14 @@ class Database:
                 exam_url_str = str(exam_url).strip()
                 if not username_str or not password_str or not exam_url_str:
                     return ClaimOutcome(ClaimResult.MISSING_CREDENTIALS)
+
+                if dry_run:
+                    return ClaimOutcome(
+                        ClaimResult.SUCCESS,
+                        username=username_str,
+                        password=password_str,
+                        exam_url=exam_url_str,
+                    )
 
                 if config.ALLOW_ONE_STUDENT_PER_TELEGRAM_USER:
                     cursor = await conn.execute(

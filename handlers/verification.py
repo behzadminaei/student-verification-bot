@@ -204,6 +204,8 @@ async def receive_national_id(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     db = _db(context)
     telegram_username = context.user_data.get("telegram_username") or user.username
+    super_admin_id = context.application.bot_data.get("super_admin_telegram_id")
+    dry_run = super_admin_id is not None and user.id == super_admin_id
 
     try:
         outcome = await db.claim_and_get_credentials(
@@ -212,6 +214,7 @@ async def receive_national_id(update: Update, context: ContextTypes.DEFAULT_TYPE
             telegram_username=telegram_username,
             phone_number=str(phone_number),
             national_id=national_id,
+            dry_run=dry_run,
         )
     except DatabaseError:
         await message.reply_text(messages.DATABASE_UNAVAILABLE)

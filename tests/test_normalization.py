@@ -15,6 +15,12 @@ def test_persian_arabic_character_normalization() -> None:
     assert normalize_name("علي اكبر") == "علی اکبر"
     assert normalize_name("  محمد   رضا  ") == "محمد رضا"
     assert normalize_name("كیوان\u200cنژاد") == "کیواننژاد"
+    assert normalize_name("آرمین") == "ارمین"
+
+
+def test_alef_madda_matching() -> None:
+    assert names_match("آزاده", "ازاده")
+    assert names_match("آرمین محمدی", "ارمین محمدی")
 
 
 def test_persian_arabic_digit_conversion() -> None:

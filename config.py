@@ -79,10 +79,23 @@ def load_config() -> dict[str, typ.Any]:
         admin_username = f"@{admin_username}"
     log_level = os.getenv("LOG_LEVEL", "INFO").strip().upper() or "INFO"
 
+    super_admin_raw = os.getenv("SUPER_ADMIN_TELEGRAM_ID", "94571452").strip()
+    super_admin_telegram_id: int | None
+    if not super_admin_raw:
+        super_admin_telegram_id = None
+    else:
+        try:
+            super_admin_telegram_id = int(super_admin_raw)
+        except ValueError as exc:
+            raise ConfigError(
+                f"SUPER_ADMIN_TELEGRAM_ID must be an integer, got: {super_admin_raw!r}"
+            ) from exc
+
     return {
         "bot_token": bot_token,
         "required_group_id": required_group_id,
         "database_path": database_path,
         "admin_username": admin_username,
+        "super_admin_telegram_id": super_admin_telegram_id,
         "log_level": log_level,
     }

@@ -188,6 +188,77 @@ async def test_safe_update_sets_verification_metadata(db: Database) -> None:
 
 
 @pytest.mark.asyncio
+async def test_dry_run_returns_credentials_without_mutating(db: Database) -> None:
+    student_id = await db.find_student_id_by_name("علی اکبر محمدی")
+    assert student_id is not None
+
+    outcome = await db.claim_and_get_credentials(
+        student_id=student_id,
+        telegram_user_id=94571452,
+        telegram_username="behzadminaei",
+        phone_number="+989121111111",
+        national_id="0013549081",
+        dry_run=True,
+    )
+    assert outcome.result == ClaimResult.SUCCESS
+    assert outcome.username == "ali.user"
+    assert outcome.password == "secret-pass"
+    assert outcome.exam_url == "https://exam.example/e/ex1/login"
+
+    cursor = await db.connection.execute(
+        "SELECT telegram_user_id, telegram_username, phone_number, national_id, verified_at "
+        "FROM students WHERE id = ?",
+        (student_id,),
+    )
+    row = await cursor.fetchone()
+    assert row is not None
+    assert row["telegram_user_id"] is None
+    assert row["telegram_username"] is None
+    assert row["phone_number"] is None
+    assert row["national_id"] is None
+    assert row["verified_at"] is None
+
+
+@pytest.mark.asyncio
+async def test_dry_run_succeeds_when_already_claimed(db: Database) -> None:
+    student_id = await db.find_student_id_by_name("علی اکبر محمدی")
+    assert student_id is not None
+
+    claimed = await db.claim_and_get_credentials(
+        student_id=student_id,
+        telegram_user_id=1001,
+        telegram_username="user_one",
+        phone_number="+989121111111",
+        national_id="0013549081",
+    )
+    assert claimed.result == ClaimResult.SUCCESS
+
+    dry = await db.claim_and_get_credentials(
+        student_id=student_id,
+        telegram_user_id=94571452,
+        telegram_username="behzadminaei",
+        phone_number="+989199999999",
+        national_id="0499370899",
+        dry_run=True,
+    )
+    assert dry.result == ClaimResult.SUCCESS
+    assert dry.username == "ali.user"
+    assert dry.password == "secret-pass"
+
+    cursor = await db.connection.execute(
+        "SELECT telegram_user_id, telegram_username, phone_number, national_id "
+        "FROM students WHERE id = ?",
+        (student_id,),
+    )
+    row = await cursor.fetchone()
+    assert row is not None
+    assert int(row["telegram_user_id"]) == 1001
+    assert row["telegram_username"] == "user_one"
+    assert row["phone_number"] == "+989121111111"
+    assert row["national_id"] == "0013549081"
+
+
+@pytest.mark.asyncio
 async def test_missing_credentials(db: Database) -> None:
     student_id = await db.find_student_id_by_name("بدون رمز")
     assert student_id is not None
