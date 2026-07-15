@@ -27,6 +27,7 @@ from services.normalization import (
     normalize_phone,
 )
 from services.rate_limit import rate_limiter
+from services.statistics_materials import StatisticsMaterials, is_stats1_exam_url
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +39,36 @@ def is_valid_own_contact(contact_user_id: int | None, telegram_user_id: int) -> 
 
 def _db(context: ContextTypes.DEFAULT_TYPE) -> Database:
     return context.application.bot_data["db"]
+
+
+def _statistics_materials(
+    context: ContextTypes.DEFAULT_TYPE,
+) -> StatisticsMaterials | None:
+    return context.application.bot_data.get("statistics_materials")
+
+
+async def _send_stats1_materials_if_needed(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+    exam_url: str,
+) -> None:
+    if not is_stats1_exam_url(exam_url):
+        return
+    message = update.effective_message
+    chat = update.effective_chat
+    if message is None or chat is None:
+        return
+    materials = _statistics_materials(context)
+    if materials is None:
+        logger.error("statistics_materials not configured; skipping PDF send")
+        await message.reply_text(messages.STATS1_MATERIALS_FAILED)
+        return
+    await message.reply_text(messages.STATS1_MATERIALS_NOTICE)
+    try:
+        await materials.send_to_chat(context.bot, chat.id)
+    except Exception:
+        logger.exception("Failed to send stats1 materials to chat_id=%s", chat.id)
+        await message.reply_text(messages.STATS1_MATERIALS_FAILED)
 
 
 def _increment_retry(context: ContextTypes.DEFAULT_TYPE, key: str) -> int:
@@ -237,6 +268,7 @@ async def receive_national_id(update: Update, context: ContextTypes.DEFAULT_TYPE
             ),
             parse_mode=ParseMode.HTML,
         )
+        await _send_stats1_materials_if_needed(update, context, outcome.exam_url)
         clear_conversation_data(context)
         rate_limiter.clear(user.id)
         return ConversationHandler.END

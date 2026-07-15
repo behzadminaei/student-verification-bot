@@ -25,6 +25,7 @@ from handlers.verification import (
     receive_student_number,
 )
 from services.database import Database, SchemaError
+from services.statistics_materials import StatisticsMaterials
 
 
 def _configure_logging(level: str) -> None:
@@ -67,6 +68,18 @@ async def post_init(application: Application) -> None:
     await db.connect()
     logging.getLogger(__name__).info("Database connected and schema validated")
 
+    materials: StatisticsMaterials | None = application.bot_data.get(
+        "statistics_materials"
+    )
+    archive_chat_id = application.bot_data.get("super_admin_telegram_id")
+    if materials is not None and archive_chat_id is not None:
+        try:
+            await materials.warmup(application.bot, int(archive_chat_id))
+        except Exception:
+            logging.getLogger(__name__).exception(
+                "Failed to warm statistics PDF file_id cache; "
+                "files will be uploaded on first stats1 delivery"
+            )
 
 async def post_shutdown(application: Application) -> None:
     db: Database | None = application.bot_data.get("db")
@@ -99,6 +112,9 @@ def main() -> None:
     application.bot_data["required_group_ids"] = cfg["required_group_ids"]
     application.bot_data["admin_username"] = cfg["admin_username"]
     application.bot_data["super_admin_telegram_id"] = cfg["super_admin_telegram_id"]
+    application.bot_data["statistics_materials"] = StatisticsMaterials(
+        cfg["statistics_files_dir"]
+    )
 
     application.add_handler(build_conversation_handler())
     application.add_handler(CommandHandler("help", help_command))

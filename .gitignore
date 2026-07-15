@@ -8,3 +8,4 @@ students.db
 *.db
 !tests/
 .DS_Store
+statistics_files/.file_ids.json

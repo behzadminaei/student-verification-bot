@@ -110,6 +110,11 @@ def load_config() -> dict[str, typ.Any]:
                 f"SUPER_ADMIN_TELEGRAM_ID must be an integer, got: {super_admin_raw!r}"
             ) from exc
 
+    statistics_files_dir = (
+        os.getenv("STATISTICS_FILES_DIR", "statistics_files").strip()
+        or "statistics_files"
+    )
+
     return {
         "bot_token": bot_token,
         "required_group_ids": required_group_ids,
@@ -117,4 +122,5 @@ def load_config() -> dict[str, typ.Any]:
         "admin_username": admin_username,
         "super_admin_telegram_id": super_admin_telegram_id,
         "log_level": log_level,
+        "statistics_files_dir": statistics_files_dir,
     }

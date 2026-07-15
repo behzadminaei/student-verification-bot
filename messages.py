@@ -147,5 +147,15 @@ def credentials_success(username: str, password: str, exam_url: str) -> str:
     )
 
 
+STATS1_MATERIALS_NOTICE = (
+    "📚 در ادامه، فایل‌های PDF فصل‌های درس آمار برای شما ارسال می‌شود."
+)
+
+STATS1_MATERIALS_FAILED = (
+    "⚠️ حساب شما تأیید شد، اما ارسال فایل‌های درسی موقتاً ناموفق بود. "
+    "لطفاً کمی صبر کنید و در صورت نیاز با مدیر تماس بگیرید."
+)
+
+
 def format_admin(admin: str) -> str:
     return admin if admin.startswith("@") else f"@{admin}"

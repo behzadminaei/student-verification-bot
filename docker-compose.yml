@@ -7,3 +7,4 @@ services:
     volumes:
       - ./students.db:/app/students.db
       - ./.env:/app/.env:ro
+      - ./statistics_files:/app/statistics_files
